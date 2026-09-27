@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "skills": {
+    "aws-drawio-import": {
+      "source": "nogikun/skills",
+      "sourceType": "github",
+      "skillPath": "skills/aws-drawio-import/SKILL.md",
+      "computedHash": "1fe3f917781f172156ac737f553a6a611944b344d7d2b70c5c56b8d89f571cef"
+    },
+    "drawio": {
+      "source": "bahayonghang/drawio-skills",
+      "sourceType": "github",
+      "skillPath": "skills/drawio/SKILL.md",
+      "computedHash": "7136e8aed5e720f5061c6026307d0731d6c271520025de9af6a9a022fbd9969f"
+    },
+    "html-deck": {
+      "source": "nogikun/skills",
+      "sourceType": "github",
+      "skillPath": "skills/html-deck/SKILL.md",
+      "computedHash": "76b28bec8f9f4cf2161b526994b84a524bd694d1da9ac2b4070ead1622d8fb14"
+    }
+  }
+}
