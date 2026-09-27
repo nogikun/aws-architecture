@@ -5,8 +5,8 @@
 
 - リポジトリ: `/Users/takahashikazuaki/Documents/git/aws-architecture`
 - スキル: `skills/arch-builder/` (まず `SKILL.md` を読む。評価の決まりは `evals/README.md`、課題は `evals/evals.json`)
-- 出力先: `skills/arch-builder-workspace/iteration-4/`
-- 前回までの結果: `skills/arch-builder-workspace/iteration-1〜3/`、前回のレビュー: `review-2026-09-27.md`
+- 出力先: `arch-builder-workspace/iteration-4/`
+- 前回までの結果: `arch-builder-workspace/iteration-1〜3/`、前回のレビュー: `review-2026-09-27.md`
 
 ## 今回確かめたいこと
 
@@ -38,7 +38,7 @@ iteration-3 のあとに入れた変更が効いているかを見る。
 cd /Users/takahashikazuaki/Documents/git/aws-architecture
 git rev-parse --short HEAD                                   # run.json に書く
 uv run --project skills/arch-builder/tools arch doctor       # OK と Asset Package の日付を確認
-uv run --project skills/arch-builder/tools pytest skills/arch-builder/tools/tests -q   # 21 件すべて通ること (40 秒ほど)
+uv run --project skills/arch-builder/tools pytest skills/arch-builder/tools/tests -q   # 22 件すべて通ること (40 秒ほど)
 ```
 
 - 素の `python3` は使わない。この環境では Nix の shim が自分自身を起動し続けて止まる。Python は必ず `uv run` 経由で動かす
@@ -129,7 +129,7 @@ iteration-4/
 ### machine — スクリプトで採点する
 
 ```bash
-uv run --project skills/arch-builder/tools python skills/arch-builder/evals/grade_machine.py skills/arch-builder-workspace/iteration-4
+uv run --project skills/arch-builder/tools python skills/arch-builder/evals/grade_machine.py arch-builder-workspace/iteration-4
 ```
 
 各 run に `machine.json` ができる。スキルなしの図は draw.io 標準の aws4 図形で描かれることが多く、lint は公式 ZIP
@@ -164,7 +164,7 @@ skill-creator のスクリプトを使う (パスはこの環境のもの。無�
 
 ```bash
 SC="/Users/takahashikazuaki/.claude/skills/synced/0905d599-d8ad-4112-b9b9-b37f9687085c_28e68a8f-a5f9-4c0f-a461-d3135eedb52f/skill-creator"
-W=/Users/takahashikazuaki/Documents/git/aws-architecture/skills/arch-builder-workspace
+W=/Users/takahashikazuaki/Documents/git/aws-architecture/arch-builder-workspace
 cd "$SC"
 uv run --no-project --python 3.13 python -m scripts.aggregate_benchmark $W/iteration-4 --skill-name arch-builder
 uv run --no-project --python 3.13 python eval-viewer/generate_review.py $W/iteration-4 --skill-name arch-builder \
@@ -173,7 +173,7 @@ uv run --no-project --python 3.13 python eval-viewer/generate_review.py $W/itera
 
 `benchmark.json` の `runs_per_configuration` が 3 になっているか確かめる。
 
-## 4. 報告 — `skills/arch-builder-workspace/review-<YYYY-MM-DD>.md`
+## 4. 報告 — `arch-builder-workspace/review-<YYYY-MM-DD>.md`
 
 `review-2026-09-27.md` と同じ形で書く。必ず入れるもの:
 

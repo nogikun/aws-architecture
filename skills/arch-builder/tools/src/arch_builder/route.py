@@ -339,8 +339,9 @@ def score(path, edge, obstacles, headers, done_segs, label_size, frames=(), done
     own = label_rect(path, label, label_size)
     cost_l = 0
     for r, t_path, t_src, t_dst, t_cls in done_labels:
-        if crosses_label(r, path, t_path) or (
-                own and rects_overlap(own, r) and not shares_trunk(src, dst, cls, t_src, t_dst, t_cls)):
+        # Shared wire segments are allowed for a fan-out, but each mxCell still
+        # draws its own label. Overlapping labels are never a valid shared trunk.
+        if crosses_label(r, path, t_path) or (own and rects_overlap(own, r)):
             cost_l += W_LABEL
     if own:
         cost_l += W_LABEL * any(seg_hits(a, b, own) and not any(_near_collinear((a, b), o, 1) for o in zip(path, path[1:]))
