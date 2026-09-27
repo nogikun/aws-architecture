@@ -1,6 +1,11 @@
 .direnv/
 .DS_Store
 
+# エージェント向けスキルの実体・symlink (ローカルの導入設定であり、リポジトリでは配布しない)
+.agents/
+.claude/skills/
+.kiro/skills/
+
 # Python / uv
 __pycache__/
 .pytest_cache/
@@ -9,7 +14,7 @@ __pycache__/
 # arch-builder
 # 取り込んだ AWS 公式アイコン (ZIP から `arch icons build` で再生成できる)
 skills/arch-builder/icons/
-# 検証の実行結果 (手順書 test.md とレビュー記録 review-*.md は残す)
-skills/arch-builder-workspace/iteration-*/
+# 検証の実行結果 (iteration-N の生成物は手順書・レビューと分けて無視する)
+arch-builder-workspace/iteration-*/
 # 作図ループの作業ファイル
 .arch-loop/
