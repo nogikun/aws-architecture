@@ -4,6 +4,7 @@
 
 ## まず見る資料
 
+- [画像由来ベンチマークのレビュー](review-2026-09-28-image-benchmark.md) — 参考写真をリポジトリに含めず、文字起こしした Eval 4 と段階別の結果を記録。
 - [PNG左右比較](png-comparison-iteration-4/compare.md) — iteration-4の最終PNGをwith-skill / without-skillで並べています。
 - [iteration-4レビュー](review-2026-09-27-iteration-4.md) — 評価結果、図の品質、修正後のスモーク検証。
 - [過去レビュー](review-2026-09-27.md) — iteration-1 / 2のレビューと改善提案。
@@ -20,5 +21,6 @@
 | `iteration-1/`〜`iteration-3/` | 過去の評価runと集計 |
 | `iteration-4/` | 3課題 × 2条件 × 3 runの基準評価 |
 | `iteration-4-remediation/` | 基準評価を変更せずに実施した、修正版Skillのスモーク検証 |
+| `iteration-5/`〜`iteration-10/` | 画像由来の Eval 4 を使った単一サンプルの改善検証。最終候補は iteration-10。統計的な3 run比較ではありません |
 
 iterationごとのrun出力は`.gitignore`対象です。手順書、レビュー、比較用Markdownは追跡対象としてこのディレクトリ直下に置いています。
