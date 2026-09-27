@@ -1,7 +1,7 @@
 # arch-builder の評価の回し方
 
 `evals.json` のプロンプトを、スキルあり (`with_skill`) とスキルなし (`without_skill`) で実行し、
-成果物を採点して比べる。結果は `skills/arch-builder-workspace/iteration-N/` に残す (git 管理下)。
+成果物を採点して比べる。結果はリポジトリ直下の `arch-builder-workspace/iteration-N/` に残す。run単位の実行成果物は `.gitignore` 対象で、評価手順・レビュー・比較用MarkdownはGitで管理する。
 
 ## 実行
 

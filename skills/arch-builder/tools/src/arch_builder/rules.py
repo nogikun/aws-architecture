@@ -225,7 +225,9 @@ def lint(m: Model, layout_first: bool = False) -> list[Finding]:
             add("warn", "N-EDGE-LABEL-CROSSED", e.src, f"線 {name} のラベル '{e.label}' の上を {crossing} が通っている",
                 "ラベルの文字が線で消される。並び順を変えるか、ラベルを短くして線の長い区間に来るようにする")
         for o, olr in labels[n_i + 1:]:
-            if rects_overlap(lr, olr) and not shares_trunk(e.src, e.dst, edge_class(e), o.src, o.dst, edge_class(o)):
+            # The edge may share a wire trunk, but its label is rendered
+            # independently, so coincident text must still be reported.
+            if rects_overlap(lr, olr):
                 add("warn", "N-EDGE-LABEL-OVERLAP", e.src, f"線 {name} と {o.src} -> {o.dst} のラベルが重なっている")
         if any(rects_overlap(lr, h) for h in headers):
             add("warn", "N-EDGE-LABEL-OVERLAP", e.src, f"線 {name} のラベルがグループの見出しに重なっている")

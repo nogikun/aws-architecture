@@ -4,6 +4,7 @@
 """
 
 import base64
+import copy
 import re
 import urllib.parse
 import zlib
@@ -154,6 +155,13 @@ def test_router_detours_around_icons_and_labels(tmp_path):
     e = m.edges[0]
     if e.sides[0] == "bottom":
         assert e.path[0][1] > cli.route_box(m.items["a"]).label[1] + cli.route_box(m.items["a"]).label[3]
+
+
+def test_shared_trunk_does_not_hide_overlapping_labels(tmp_path):
+    """共有してよい幹でも、別々に描かれる同じ位置のラベルは警告する。"""
+    m = cli.load_yaml(row_of_three(tmp_path, label="HTTPS"), LIB)
+    m.edges.append(copy.deepcopy(m.edges[0]))
+    assert ("N-EDGE-LABEL-OVERLAP", "a") in codes(m)
 
 
 def test_edge_through_a_node_is_an_error(tmp_path):
