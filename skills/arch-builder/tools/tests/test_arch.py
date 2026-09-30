@@ -92,20 +92,31 @@ def test_utf8_yaml_build_preserves_flow_and_saved_lint(tmp_path, capsys, monkeyp
     assert not [f for f in lint(saved) if f.code.startswith("N-PORT-")]
 
 
-def test_page_aspect_override_builds_and_survives_import(tmp_path):
+@pytest.mark.parametrize("aspect", [4 / 3, 1.77, 1.78, 16 / 9])
+def test_page_aspect_override_builds_and_survives_import(tmp_path, aspect):
     p = tmp_path / "page.arch.yaml"
-    p.write_text(yaml.safe_dump({"title": "page", "page_aspect": 4 / 3,
-                                 "items": [{"id": "user", "icon": "Users", "label": "User"}],
-                                 "edges": []}), encoding="utf-8")
+    p.write_text(yaml.safe_dump({"title": "page", "page_aspect": aspect,
+                                 "items": [{"id": "user", "icon": "Users", "label": "User"},
+                                           {"id": "app", "icon": "AWS Lambda", "label": "App"}],
+                                 "edges": [{"from": "user", "to": "app"}]}), encoding="utf-8")
     model = cli.load_yaml(p, LIB)
     graph = ET.fromstring(cli.to_drawio(model)).find("./diagram/mxGraphModel")
-    assert float(graph.get("pageWidth")) / float(graph.get("pageHeight")) == pytest.approx(4 / 3, abs=1e-3)
+    assert float(graph.get("pageWidth")) / float(graph.get("pageHeight")) == pytest.approx(aspect, abs=1e-3)
 
     drawio = tmp_path / "page.drawio"
     drawio.write_text(cli.to_drawio(model), encoding="utf-8")
     imported = cli.load_drawio(drawio, LIB)
-    assert imported.page_aspect == pytest.approx(4 / 3, abs=1e-3)
-    assert yaml.safe_load(cli.dump_yaml(imported))["page_aspect"] == pytest.approx(4 / 3, abs=1e-3)
+    assert imported.page_aspect == pytest.approx(aspect, abs=1e-3)
+    assert yaml.safe_load(cli.dump_yaml(imported))["page_aspect"] == pytest.approx(aspect, abs=1e-3)
+
+    exported = tmp_path / "imported.arch.yaml"
+    rebuilt = tmp_path / "rebuilt.drawio"
+    assert cli.main(["import", str(drawio), "-o", str(exported)]) == 0
+    assert yaml.safe_load(exported.read_text(encoding="utf-8"))["page_aspect"] == pytest.approx(aspect, abs=1e-3)
+    assert cli.main(["build", str(exported), "-o", str(rebuilt)]) == 0
+    rebuilt_graph = cli.read_graph(rebuilt)
+    for dimension in ("pageWidth", "pageHeight"):
+        assert rebuilt_graph.get(dimension) == graph.get(dimension)
 
     p.write_text(yaml.safe_dump({"title": "page", "items": [{"id": "user", "icon": "Users", "label": "User"}],
                                  "edges": []}), encoding="utf-8")

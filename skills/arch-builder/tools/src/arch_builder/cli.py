@@ -808,7 +808,7 @@ def load_drawio(path: Path, lib: Library | None) -> Model:
             aspect = float(graph.get("pageWidth")) / float(graph.get("pageHeight"))
         except (ValueError, ZeroDivisionError):
             aspect = None
-        if aspect is not None and 1.0 <= aspect <= 2.2 and abs(aspect - 16 / 9) > 0.01:
+        if aspect is not None and 1.0 <= aspect <= 2.2:
             m.page_aspect = round(aspect, 4)
     m.from_drawio = True  # 座標は draw.io 上の実物。lint で自動配置し直さない
     cells = []  # (id, attrs, mxCell)
