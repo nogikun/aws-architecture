@@ -1,0 +1,9 @@
+{"notation": "python", "task": "t1", "builds": [
+{"n": 1, "errors": [], "warns": [], "parse_error": "FileNotFoundError (diagram.py 未作成)"},
+{"n": 2, "errors": ["N-ASPECT-PORTRAIT", "N-GROUP-ICON"], "warns": ["A-REGIONAL-IN-VPC", "A-SINGLE-AZ", "N-EDGE-BENDS", "N-EDGE-CROSS", "N-EDGE-OVERLAP", "N-EDGE-THROUGH-HEADER", "N-EDGE-TOUCH"], "parse_error": null},
+{"n": 3, "errors": ["N-ASPECT-PORTRAIT", "N-GROUP-ICON"], "warns": ["A-REGIONAL-IN-VPC", "A-SINGLE-AZ", "N-EDGE-BENDS", "N-EDGE-CROSS", "N-EDGE-OVERLAP", "N-EDGE-THROUGH-HEADER", "N-EDGE-TOUCH"], "parse_error": null},
+{"n": 4, "errors": ["N-ASPECT-PORTRAIT", "N-GROUP-ICON"], "warns": ["A-REGIONAL-IN-VPC", "A-SINGLE-AZ", "N-EDGE-BENDS", "N-EDGE-CROSS", "N-EDGE-OVERLAP", "N-EDGE-THROUGH-HEADER", "N-EDGE-TOUCH"], "parse_error": null},
+{"n": 5, "errors": [], "warns": ["A-SINGLE-AZ", "N-EDGE-BENDS", "N-EDGE-CROSS", "N-EDGE-NEAR-NODE", "N-EDGE-OVERLAP", "N-EDGE-THROUGH-HEADER", "N-EDGE-TOUCH"], "parse_error": null},
+{"n": 6, "errors": [], "warns": ["A-SINGLE-AZ", "N-EDGE-BENDS", "N-EDGE-CROSS", "N-EDGE-NEAR-NODE", "N-EDGE-OVERLAP", "N-EDGE-THROUGH-HEADER", "N-EDGE-TOUCH"], "parse_error": null}],
+"final_errors": 0, "final_warns": 37, "icon_searches": 7,
+"difficulties": "単体の外部システム箱を d.group(\"generic\", ラベル) で作る書き方が、with 無しで参照を返すのか分からず、with ... as env: pass と書いた (通ったが推測)。 AgentCore 系の部品が VPC 内だと A-REGIONAL-IN-VPC になる一方、図の依頼は VPC 内配置を求めるため、lucide:bot / lucide:server で逃がした (資料に指針なし)。 AWS Cloud アイコンを単体 node にして N-GROUP-ICON の error になった (資料に記載なし)。 Region を column にすると縦長 error、row に変更。 1 つの SubAgent から 2 本の線 (Interceptor と Role) が重なる warn は、並び順の調整方法が資料から読み取れず未解消。 gw1 >> subs のリスト分岐は迷わず書けた。 初回はファイル未作成のまま build して 1 回無駄にした。"}

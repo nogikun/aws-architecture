@@ -1,0 +1,50 @@
+<diagram title="受発注SaaS">
+  <node id="user" icon="lucide:users">利用者<br>(ブラウザ)</node>
+  <group id="cf" kind="generic" label="Cloudflare" layout="column">
+    <node id="waf" icon="cloudflare:waf">WAF / CDN</node>
+    <group id="edge" kind="layout">
+      <node id="pages" icon="cloudflare:pages">Pages<br>React</node>
+      <node id="workers" icon="cloudflare:workers">Workers<br>API入口</node>
+      <node id="kv" icon="cloudflare:kv">KV<br>セッション</node>
+    </group>
+  </group>
+  <node id="auth0" icon="logos:auth0-icon">Auth0</node>
+  <group id="mid" kind="layout" layout="column">
+  <group id="app" kind="generic" label="アプリ" layout="column">
+    <node id="orders" icon="devicon:go">注文 API<br>Go</node>
+    <node id="stock" icon="devicon:go">在庫 API<br>Go</node>
+  </group>
+  <node id="dd" icon="devicon:datadog">Datadog</node>
+  </group>
+  <group id="data" kind="generic" label="データ" layout="column">
+    <node id="pg" icon="devicon:postgresql">PostgreSQL</node>
+    <node id="redis" icon="devicon:redis">Redis<br>キャッシュ</node>
+  </group>
+  <group id="async" kind="generic" label="非同期処理" layout="column">
+    <node id="kafka" icon="devicon:apachekafka">Kafka</node>
+    <node id="worker" icon="devicon:python">Python<br>ワーカー</node>
+  </group>
+  <group id="out" kind="layout" layout="column">
+    <node id="r2" icon="cloudflare:r2">R2<br>帳票PDF</node>
+    <node id="acct" icon="lucide:building-2">会計システム<br>(外部)</node>
+  </group>
+  <edge from="user" to="waf">HTTPS</edge>
+  <edge from="waf" to="pages">静的配信</edge>
+  <edge from="waf" to="workers">API</edge>
+  <edge from="workers" to="auth0">認証</edge>
+  <edge from="workers" to="kv">セッション</edge>
+  <edge from="workers" to="orders">REST</edge>
+  <edge from="workers" to="stock">REST</edge>
+  <edge from="orders" to="pg">SQL</edge>
+  <edge from="stock" to="pg">SQL</edge>
+  <edge from="stock" to="redis">キャッシュ</edge>
+  <edge from="orders" to="kafka">注文確定</edge>
+  <edge from="kafka" to="worker" dashed>非同期</edge>
+  <edge from="worker" to="r2">PDF</edge>
+  <edge from="worker" to="acct">夜間CSV</edge>
+  <edge from="orders" to="dd" dashed>メトリクス</edge>
+  <edge from="stock" to="dd" dashed>メトリクス</edge>
+  <edge from="worker" to="dd" dashed>メトリクス</edge>
+  <edge from="workers" to="dd" dashed>メトリクス</edge>
+  <note>メトリクス送信は点線で通信と区別</note>
+</diagram>

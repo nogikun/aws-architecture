@@ -7,8 +7,6 @@ from __future__ import annotations
 
 import argparse
 import base64
-import difflib
-import hashlib
 import json
 import os
 import re
@@ -23,16 +21,11 @@ from xml.etree import ElementTree as ET
 
 import yaml
 
+from arch_builder.icons import (ICON_DOWNLOAD_URL, ICON_STYLES, LIB_FILES, Icon, Library, is_set_ref,  # noqa: F401
+                                lib_dir, package_date, tile)
+
 SKILL_DIR = Path(__file__).resolve().parents[3]  # tools/src/arch_builder/cli.py -> <skill>
 VENDOR = SKILL_DIR / "vendor"
-DEFAULT_LIB = SKILL_DIR / "icons" / "current"
-LIB_FILES = {
-    "service": "AWS-Architecture-Services.xml",
-    "resource": "AWS-Resource-Icons.xml",
-    "category": "AWS-Category-Icons.xml",
-    "group": "AWS-Architecture-Groups.xml",
-}
-ICON_DOWNLOAD_URL = "https://aws.amazon.com/architecture/icons/"
 
 # ---------------------------------------------------------------------------
 # AWS グループ (Architecture Icons のグループ規約)
@@ -82,22 +75,6 @@ BORDER_DEFAULTS = {
     "AWS Transit Gateway Attachment": "bottom",
 }
 SIDES = ("top", "right", "bottom", "left")
-# 「Amazon VPC NAT Gateway」を「NAT Gateway」でも引けるようにする接頭辞
-ALIAS_PREFIXES = re.compile(r"^(amazon vpc|elastic load balancing|amazon ec2|amazon route 53|amazon simple storage "
-                            r"service|aws identity access management|amazon cloudwatch|aws lambda|amazon dynamodb) ",
-                            re.I)
-# 略称 -> 公式名 (略称で書かれがちなものだけ)
-ABBREV = {
-    "s3": "Amazon Simple Storage Service", "sqs": "Amazon Simple Queue Service",
-    "sns": "Amazon Simple Notification Service", "ses": "Amazon Simple Email Service",
-    "iam": "AWS Identity and Access Management", "kms": "AWS Key Management Service",
-    "ecs": "Amazon Elastic Container Service", "eks": "Amazon Elastic Kubernetes Service",
-    "ecr": "Amazon Elastic Container Registry", "ebs": "Amazon Elastic Block Store",
-    "elastic file system": "Amazon EFS", "alb": "Elastic Load Balancing Application Load Balancer",
-    "nlb": "Elastic Load Balancing Network Load Balancer", "elb": "Elastic Load Balancing",
-    "igw": "Amazon VPC Internet Gateway", "nat": "Amazon VPC NAT Gateway", "apigw": "Amazon API Gateway",
-}
-
 # レイアウト定数 (px)
 ICON = 48
 NODE_W = 120          # アイコン + ラベルに確保する枠の幅
@@ -110,88 +87,6 @@ GROUP_ICON = 32
 STRETCH_MAX = 1.5     # 枠を中身に必要な大きさの何倍まで広げてよいか (面積比。2 倍以上は error)
 
 
-# ---------------------------------------------------------------------------
-# アイコンライブラリ
-# ---------------------------------------------------------------------------
-@dataclass
-class Icon:
-    name: str        # "Amazon RDS"
-    title: str       # "Services / Databases / Amazon RDS (48)"
-    kind: str        # service | resource | category | group
-    category: str    # "Databases"
-    data: str        # data:image/svg+xml,<base64>
-    w: float
-    h: float
-    variant: str = ""  # "48" / "48 Light" / "32" など
-
-
-def lib_dir(arg: str | None = None) -> Path:
-    return Path(arg or os.environ.get("ARCH_ICON_LIB") or DEFAULT_LIB)
-
-
-class Library:
-    def __init__(self, path: Path):
-        self.path = path
-        self.icons: list[Icon] = []
-        for kind, fname in LIB_FILES.items():
-            f = path / fname
-            if not f.exists():
-                raise FileNotFoundError(f)
-            for e in json.loads(ET.parse(f).getroot().text):
-                m = re.fullmatch(r"(.*) \(([^)]*)\)", e["title"])
-                full, variant = (m.group(1), m.group(2)) if m else (e["title"], "")
-                parts = full.split(" / ")
-                self.icons.append(Icon(parts[-1], e["title"], kind, parts[1] if len(parts) > 2 else "",
-                                       e["data"], float(e["w"]), float(e["h"]), variant))
-        self._by_key: dict[str, Icon] = {}
-        self._by_hash: dict[str, Icon] = {}
-        # 同名は service > resource > category > group、サイズは 48 / 48 Light / 32 を優先
-        rank = {"service": 0, "resource": 1, "category": 2, "group": 3}
-        pref = {"48": 0, "48 Light": 1, "32": 2}
-        for ic in sorted(self.icons, key=lambda i: (rank[i.kind], pref.get(i.variant, 9))):
-            self._by_hash.setdefault(_digest(ic.data), ic)
-            if ic.variant not in pref:
-                continue
-            full = ic.title.rsplit(" (", 1)[0]
-            for k in {full, ic.name, _strip_vendor(ic.name), ALIAS_PREFIXES.sub("", ic.name)}:
-                self._by_key.setdefault(_norm(k), ic)
-
-    def resolve(self, name: str) -> Icon | None:
-        short = _norm(_strip_vendor(name))
-        return (self._by_key.get(_norm(name)) or self._by_key.get(short)
-                or (self._by_key.get(_norm(ABBREV[short])) if short in ABBREV else None))
-
-    def by_data(self, data: str) -> Icon | None:
-        return self._by_hash.get(_digest(data))
-
-    def group_icon(self, name: str) -> Icon | None:
-        return next((i for i in self.icons if i.kind == "group" and i.name == name and i.variant == "32"), None)
-
-    def suggest(self, name: str, n: int = 5) -> list[str]:
-        keys = {_norm(i.name): i.name for i in self.icons if i.kind in ("service", "resource")}
-        return [keys[k] for k in difflib.get_close_matches(_norm(name), keys, n=n, cutoff=0.5)]
-
-    def search(self, word: str) -> list[Icon]:
-        w = _norm(ABBREV.get(_norm(word), word))
-        seen, out = set(), []
-        for ic in self.icons:
-            if ic.kind in ("service", "resource") and w in _norm(ic.title) and ic.name not in seen:
-                if ic.variant in ("48", "48 Light"):
-                    seen.add(ic.name)
-                    out.append(ic)
-        return out
-
-
-def _norm(s: str) -> str:
-    return re.sub(r"[^a-z0-9]+", " ", s.lower()).strip()
-
-
-def _strip_vendor(s: str) -> str:
-    return re.sub(r"^(amazon|aws)\s+", "", s.strip(), flags=re.I)
-
-
-def _digest(data: str) -> str:
-    return hashlib.sha1(data.split(",", 1)[-1].encode()).hexdigest()
 
 
 # ---------------------------------------------------------------------------
@@ -243,6 +138,7 @@ class Model:
     from_drawio: bool = False  # True なら box は draw.io 上の実座標 (自動配置し直さない)
     notes: list = field(default_factory=list)  # 図の下に書く前提・注記 (「社員はインターネット経由で入る」など)
     page_aspect: float | None = None  # 任意の用紙比率。未指定なら 16:9
+    icon_style: str = "plain"  # 取り込んだセットのアイコンの見せ方: plain (そのまま) / tile (白い角丸タイルに載せる)
 
     def ancestors(self, iid: str):
         p = self.items[iid].parent
@@ -271,6 +167,10 @@ def load_yaml(path: Path, lib: Library | None) -> Model:
             if not 1.0 <= m.page_aspect <= 2.2:
                 m.problems.append(("E-PAGE-ASPECT", "page_aspect は 1.0〜2.2 の範囲で指定", None))
                 m.page_aspect = None
+    m.icon_style = doc.get("icon_style", "plain")
+    if m.icon_style not in ICON_STYLES:
+        m.problems.append(("E-ICON-STYLE", f"icon_style は {' / '.join(ICON_STYLES)} のどれか", None))
+        m.icon_style = "plain"
 
     def add(raw: dict, parent: str | None):
         iid = str(raw.get("id") or "")
@@ -361,6 +261,8 @@ def dump_yaml(m: Model) -> str:
     doc = {"title": m.title, "items": [ser(r) for r in m.roots], "edges": edges}
     if m.page_aspect is not None:
         doc["page_aspect"] = m.page_aspect
+    if m.icon_style != "plain":
+        doc["icon_style"] = m.icon_style
     if m.notes:
         doc["notes"] = m.notes
     return yaml.safe_dump(doc, sort_keys=False, allow_unicode=True, width=120, default_flow_style=None)
@@ -696,6 +598,8 @@ def to_drawio(m: Model, *, layout_done: bool = False) -> str:
         layout(m)
     mxfile = ET.Element("mxfile", host="arch-builder")
     diagram = ET.SubElement(mxfile, "diagram", id="arch", name=m.title)
+    if m.icon_style != "plain":
+        diagram.set("arch_icon_style", m.icon_style)
     # 用紙は図全体を含み、既定は16:9。必要なら arch.yaml で比率を指定できる。
     right = max((m.items[r].box[0] + m.items[r].box[2] for r in m.roots), default=0) + 40
     bottom = max((m.items[r].box[1] + m.items[r].box[3] for r in m.roots), default=0) + 40 + 24 * bool(m.notes)
@@ -733,7 +637,8 @@ def to_drawio(m: Model, *, layout_done: bool = False) -> str:
             if not it.raw_icon:
                 raise SystemExit(f"アイコンを解決できない: {it.id} icon={it.icon!r} (lint で候補を確認)")
             x, y, w, h = icon_box(it)
-            vertex(it.id, it.label, node_style(it.raw_icon), parent, (x - px, y - py, w, h),
+            icon = tile(it.raw_icon) if m.icon_style == "tile" and it.raw_icon.kind == "set" else it.raw_icon
+            vertex(it.id, it.label, node_style(icon), parent, (x - px, y - py, w, h),
                    arch_kind="node", arch_icon=it.raw_icon.name)
     if m.notes:  # 前提・注記は図の下に並べる。図の要素ではないので lint や経路探索の対象にしない
         bottom = max((m.items[r].box[1] + m.items[r].box[3] for r in m.roots), default=0)
@@ -811,6 +716,8 @@ def load_drawio(path: Path, lib: Library | None) -> Model:
         if aspect is not None and 1.0 <= aspect <= 2.2:
             m.page_aspect = round(aspect, 4)
     m.from_drawio = True  # 座標は draw.io 上の実物。lint で自動配置し直さない
+    if diagram is not None and diagram.get("arch_icon_style") in ICON_STYLES:
+        m.icon_style = diagram.get("arch_icon_style")
     cells = []  # (id, attrs, mxCell)
     for el in g.find("root"):
         if el.tag == "mxCell":
@@ -839,6 +746,8 @@ def load_drawio(path: Path, lib: Library | None) -> Model:
                 it.label = ""
         elif st.get("image", "").startswith("data:"):
             ic = lib.by_data(st["image"]) if lib else None
+            if ic is None and lib and is_set_ref(attrs.get("arch_icon") or ""):  # 取り込んだセットは名前で引き直す
+                ic = lib.resolve(attrs["arch_icon"])
             it = Item(cid, "node", parent, label, icon=attrs.get("arch_icon") or (ic.name if ic else None))
             it.raw_icon = ic
             if ic is None:
@@ -969,6 +878,12 @@ def cmd_doctor(args) -> int:
         else:
             ET.fromstring(base64.b64decode(probe[0].data.split(",", 1)[1]))  # SVG として解釈できるか
             print("  代表アイコン (EC2 / RDS / ALB) と全グループアイコンを解決・SVGデコードできた")
+        sets = lib.set_prefixes()
+        print(f"[sets] 取り込み済み (icon: <prefix>:<name>): {', '.join(sets) or 'なし'}  ({lib.sets_dir})")
+        for prefix in sets:
+            info = lib.icon_set(prefix).get("info", {})
+            print(f"  {prefix}: {info.get('name', prefix)} / {len(lib.icon_set(prefix)['icons'])} 個 / "
+                  f"ライセンス {info.get('license', {}).get('title', '不明')}")
     except (FileNotFoundError, json.JSONDecodeError, ET.ParseError, ValueError) as e:
         ok = False
         print(f"  NG: 読み込めない ({e})")
@@ -1001,13 +916,6 @@ def cmd_doctor(args) -> int:
     return 0 if ok else 2
 
 
-def package_date(lib_path: Path) -> str | None:
-    """取り込んだ Asset Package の日付 (aws-drawio-import が付ける AWS-*-YYYY-MM-DD.xml の日付)。"""
-    dates = sorted(re.findall(r"(\d{4}-\d{2}-\d{2})\.xml$", f.name)[0]
-                   for f in lib_path.parent.glob("AWS-*-????-??-??.xml"))
-    return dates[-1] if dates else None
-
-
 def _which(cmd):
     from shutil import which
     return which(cmd)
@@ -1017,8 +925,22 @@ def cmd_icons(args) -> int:
     if args.action == "build":
         out = lib_dir(args.lib).parent
         script = VENDOR / "aws-drawio-import" / "scripts" / "build_aws_drawio_libraries.py"
-        return subprocess.run([sys.executable, str(script), args.query, "--output-dir", str(out)]).returncode
+        return subprocess.run([sys.executable, str(script), args.query[0], "--output-dir", str(out)]).returncode
+    if args.action == "fetch":
+        from arch_builder import importer
+        try:
+            done = importer.run(args.query[0], args.query[1:], args.prefix)
+        except (ValueError, OSError) as e:
+            print(f"取り込めない: {e}", file=sys.stderr)
+            return 1
+        for path, doc in done:
+            lic = doc.get("info", {}).get("license", {}).get("title", "不明")
+            print(f"{doc['prefix']}: {len(doc['icons'])} 個 -> {path} (ライセンス: {lic})")
+            if doc.get("skipped"):
+                print(f"  SVG として読めず飛ばした: {len(doc['skipped'])} 個 ({', '.join(doc['skipped'][:5])} ...)")
+        return 0
     lib = open_lib(args)
+    args.query = " ".join(args.query)
     hits = lib.search(args.query)
     for ic in hits[:args.limit]:
         print(f"{ic.name}\t[{ic.kind}] {ic.category}")
@@ -1207,9 +1129,11 @@ def main(argv=None) -> int:
     sub = p.add_subparsers(dest="cmd", required=True)
 
     sub.add_parser("doctor", help="アイコン・node・draw.io Desktop が使えるか確認する")
-    s = sub.add_parser("icons", help="アイコンを探す / ZIP から取り込む")
-    s.add_argument("action", choices=["search", "build"])
-    s.add_argument("query", help="search: 検索語 / build: Icon-package ZIP のパス")
+    s = sub.add_parser("icons", help="アイコンを探す / 取り込む")
+    s.add_argument("action", choices=["search", "build", "fetch"])
+    s.add_argument("query", nargs="+", help="search: 検索語 / build: AWS Icon-package ZIP のパス / "
+                   "fetch: <ノズル> <引数...> (iconify <prefix...> | svgl | cloudflare [フォルダかZIP] | svg <フォルダかZIP> --prefix <名前>)")
+    s.add_argument("--prefix", help="fetch: 保存するセットの prefix (svg では必須)")
     s.add_argument("--limit", type=int, default=30)
     s = sub.add_parser("build", help="arch.yaml -> .drawio (生成後に lint も走る)")
     s.add_argument("spec")

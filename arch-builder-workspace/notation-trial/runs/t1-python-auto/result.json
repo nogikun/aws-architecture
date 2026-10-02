@@ -1,0 +1,9 @@
+{"notation": "python-auto", "task": "t1", "builds": [
+{"n": 1, "errors": ["N-NESTING"], "warns": ["A-REGIONAL-IN-VPC","A-SINGLE-AZ","N-EDGE-BENDS","N-EDGE-CROSS","N-EDGE-NEAR-NODE","N-EDGE-OVERLAP","N-EDGE-THROUGH-HEADER","N-EDGE-TOUCH"], "parse_error": null},
+{"n": 2, "errors": ["N-NESTING"], "warns": ["A-REGIONAL-IN-VPC","A-SINGLE-AZ","N-EDGE-BENDS","N-EDGE-CROSS","N-EDGE-NEAR-NODE","N-EDGE-OVERLAP","N-EDGE-THROUGH-HEADER","N-EDGE-TOUCH"], "parse_error": null},
+{"n": 3, "errors": [], "warns": ["A-REGIONAL-IN-VPC","A-SINGLE-AZ","N-EDGE-BENDS","N-EDGE-CROSS","N-EDGE-NEAR-NODE","N-EDGE-OVERLAP","N-EDGE-THROUGH-HEADER","N-EDGE-TOUCH"], "parse_error": null},
+{"n": 4, "errors": [], "warns": ["A-REGIONAL-IN-VPC","A-SINGLE-AZ","N-EDGE-BENDS","N-EDGE-CROSS","N-EDGE-NEAR-NODE","N-EDGE-OVERLAP","N-EDGE-THROUGH-HEADER","N-EDGE-TOUCH"], "parse_error": null},
+{"n": 5, "errors": [], "warns": ["A-REGIONAL-IN-VPC","A-SINGLE-AZ","N-EDGE-BENDS","N-EDGE-CROSS","N-EDGE-NEAR-NODE","N-EDGE-OVERLAP","N-EDGE-THROUGH-HEADER","N-EDGE-TOUCH"], "parse_error": null},
+{"n": 6, "errors": [], "warns": ["A-REGIONAL-IN-VPC","A-SINGLE-AZ","N-EDGE-BENDS","N-EDGE-CROSS","N-EDGE-NEAR-NODE","N-EDGE-OVERLAP","N-EDGE-THROUGH-HEADER","N-EDGE-TOUCH"], "parse_error": null}],
+"final_errors": 0, "final_warns": 55, "icon_searches": 4,
+"difficulties": "VPC を aws-cloud 直下に置いて N-NESTING (vpc の親は region) になった。Region 不明のため「Region (未確定)」を置いて解決した。AWS Account を region の中に入れて再度 N-NESTING (置けるのはキャンバス直下 / aws-cloud のみ)。SubAgent を縦に並べるため d.column() を試したが、資料に無い書き方で警告が 55 から 75 に増えたので戻した (縦並びの指示は未達、build 5 と 6 の差)。AgentCore を VPC 内に置くと A-REGIONAL-IN-VPC 警告が出るが、代わりのアイコンが分からず残した。警告の大半は線の交差で、auto 配置では直し方が資料から分からなかった。"}

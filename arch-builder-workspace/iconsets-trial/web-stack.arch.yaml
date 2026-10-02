@@ -1,0 +1,39 @@
+# AWS 以外のアイコンセットだけで描く試作。icon: <prefix>:<name> は `arch icons fetch` で取り込んだセットを指す
+#   cloudflare: Cloudflare 製品アイコン (cloudflare-docs) / devicon: 言語・ミドルウェア / lucide: 汎用
+title: Webサービス構成 (Cloudflare + Go)
+icon_style: tile                # 取り込んだセットのアイコンを白いタイルに載せる。外すとそのまま (web-stack-plain.png)
+items:
+  - {id: users, icon: "lucide:users", label: 利用者}
+  - id: edge
+    group: generic
+    label: Cloudflare
+    layout: column
+    children:
+      - {id: waf, icon: "cloudflare:waf", label: "WAF / CDN"}
+      - {id: workers, icon: "cloudflare:workers", label: Workers}
+      - {id: kv, icon: "cloudflare:kv", label: "KV\nセッション"}
+  - id: app
+    group: generic
+    label: アプリケーション
+    layout: column
+    children:
+      - {id: spa, icon: "devicon:react", label: "React SPA\n(Pages)"}
+      - {id: api, icon: "devicon:go", label: "Go API"}
+      - {id: job, icon: "devicon:python", label: "Python\nバッチ"}
+  - id: data
+    group: generic
+    label: データ
+    layout: column
+    children:
+      - {id: redis, icon: "devicon:redis", label: Redis}
+      - {id: pg, icon: "devicon:postgresql", label: PostgreSQL}
+      - {id: r2, icon: "cloudflare:r2", label: "R2\nファイル"}
+edges:
+  - {from: users, to: waf, label: HTTPS}
+  - {from: waf, to: spa}
+  - {from: waf, to: workers}
+  - {from: workers, to: kv}
+  - {from: workers, to: api, label: REST}
+  - {from: api, to: redis, label: cache}
+  - {from: api, to: pg, label: SQL}
+  - {from: job, to: r2, dashed: true}

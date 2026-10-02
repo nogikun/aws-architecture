@@ -1,0 +1,78 @@
+<diagram title="AgentCore 構成">
+  <node id="user" icon="Users">User</node>
+  <group id="cloud" kind="aws-cloud">
+    <group id="region" kind="region" label="ap-northeast-1 (東京・仮)" layout="column">
+      <group id="fe" kind="vpc" label="フロントエンド VPC" layout="row">
+        <node id="igw" icon="Internet Gateway">Internet Gateway</node>
+        <group id="fe-pub" kind="public-subnet" label="Public Subnet">
+          <node id="alb" icon="ALB">ALB</node>
+        </group>
+        <group id="fe-pri" kind="private-subnet" label="Private Subnet">
+          <node id="fargate" icon="AWS Fargate">Fargate</node>
+        </group>
+      </group>
+      <group id="ac" kind="vpc" label="AgentCore Platform VPC" layout="row">
+        <group id="ac-pri" kind="private-subnet" label="Private Subnet">
+          <node id="orch" icon="Amazon Bedrock AgentCore">Orchestrator<br>Agent</node>
+          <node id="gw1" icon="Amazon Bedrock AgentCore">AgentCore<br>Gateway</node>
+          <group id="subs" kind="layout" layout="column">
+            <node id="sa" icon="Amazon Bedrock AgentCore">SubAgent A</node>
+            <node id="sb" icon="Amazon Bedrock AgentCore">SubAgent B</node>
+            <node id="sc" icon="Amazon Bedrock AgentCore">SubAgent C</node>
+          </group>
+          <node id="icp" icon="Amazon Bedrock AgentCore">Interceptor</node>
+        </group>
+      </group>
+      <group id="mcp" kind="vpc" label="MCP VPC" layout="row">
+        <group id="mcp-pri" kind="private-subnet" label="Private Subnet">
+          <node id="cedar" icon="Amazon Bedrock AgentCore">Cedar Policy<br>Engine</node>
+          <node id="gw2" icon="Amazon Bedrock AgentCore">AgentCore<br>Gateway</node>
+          <group id="mcps" kind="layout" layout="column">
+            <node id="ma" icon="lucide:server">MCP Server A</node>
+            <node id="mb" icon="lucide:server">MCP Server B</node>
+            <node id="mc" icon="lucide:server">MCP Server C</node>
+          </group>
+        </group>
+      </group>
+      <node id="rag" icon="Amazon DynamoDB">RAG<br>(DynamoDB)</node>
+    </group>
+    <node id="waf" icon="AWS WAF">WAF<br>Web ACL</node>
+    <group id="acct" kind="account" label="AWS Account" layout="column">
+      <node id="ra" icon="AWS Identity Access Management Role">Role-MCP-A</node>
+      <node id="rb" icon="AWS Identity Access Management Role">Role-MCP-B</node>
+      <node id="rc" icon="AWS Identity Access Management Role">Role-MCP-C</node>
+    </group>
+  </group>
+  <group id="ext" kind="layout" layout="column">
+    <group id="awsenv" kind="generic" label="AWS environment"></group>
+    <group id="knowl" kind="generic" label="AWS Knowledge Server"></group>
+  </group>
+
+  <edge from="user" to="igw">HTTPS</edge>
+  <edge from="igw" to="alb">HTTPS</edge>
+  <edge from="alb" to="fargate">HTTPS</edge>
+  <edge from="waf" to="alb" dashed>Web ACL association</edge>
+  <edge from="fargate" to="orch">HTTPS</edge>
+  <edge from="orch" to="gw1"></edge>
+  <edge from="gw1" to="sa"></edge>
+  <edge from="gw1" to="sb"></edge>
+  <edge from="gw1" to="sc"></edge>
+  <edge from="sa" to="icp"></edge>
+  <edge from="sb" to="icp"></edge>
+  <edge from="sc" to="icp"></edge>
+  <edge from="sa" to="ra" dashed></edge>
+  <edge from="sb" to="rb" dashed></edge>
+  <edge from="sc" to="rc" dashed></edge>
+  <edge from="icp" to="gw2">HTTPS / MCP</edge>
+  <edge from="gw2" to="cedar"></edge>
+  <edge from="gw2" to="ma"></edge>
+  <edge from="gw2" to="mb"></edge>
+  <edge from="gw2" to="mc"></edge>
+  <edge from="ma" to="awsenv"></edge>
+  <edge from="mb" to="knowl"></edge>
+  <edge from="mc" to="rag"></edge>
+  <note>Region・AZ は元資料で不明のため未確定</note>
+  <note>VPC 間の具体的なネットワーク経路は不明</note>
+  <note>Role-MCP-A/B/C の権限内容は不明</note>
+  <note>MCP Server と AWS environment / Knowledge Server / RAG の対応は仮置き</note>
+</diagram>

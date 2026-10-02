@@ -1,0 +1,53 @@
+<!-- aws-3tier.yaml と同じ図をタグ表記で書いたもの -->
+<diagram title="3層Webアプリ (東京)">
+  <node id="users" icon="Users">利用者</node>
+  <group id="cloud" kind="aws-cloud" layout="column">
+    <group id="edge" kind="layout">
+      <node id="cf" icon="Amazon CloudFront">CloudFront</node>
+    </group>
+    <group id="tokyo" kind="region" label="ap-northeast-1 (東京)">
+      <group id="vpc" kind="vpc" label="VPC 10.0.0.0/16" layout="column">
+        <node id="igw" icon="Internet Gateway">Internet Gateway</node>
+        <node id="alb" icon="ALB">ALB</node>
+        <group id="azs" kind="layout">
+          <group id="az-a" kind="az" label="AZ ap-northeast-1a" layout="column">
+            <group id="pub-a" kind="public-subnet" label="Public 10.0.0.0/24">
+              <node id="nat-a" icon="NAT Gateway">NAT Gateway</node>
+            </group>
+            <group id="app-a" kind="private-subnet" label="App 10.0.10.0/24">
+              <node id="ecs-a" icon="AWS Fargate">Fargate<br>API</node>
+            </group>
+            <group id="db-a" kind="private-subnet" label="DB 10.0.20.0/24">
+              <node id="rds-a" icon="Amazon Aurora">Aurora<br>Writer</node>
+            </group>
+          </group>
+          <group id="az-c" kind="az" label="AZ ap-northeast-1c" layout="column">
+            <group id="pub-c" kind="public-subnet" label="Public 10.0.1.0/24">
+              <node id="nat-c" icon="NAT Gateway">NAT Gateway</node>
+            </group>
+            <group id="app-c" kind="private-subnet" label="App 10.0.11.0/24">
+              <node id="ecs-c" icon="AWS Fargate">Fargate<br>API</node>
+            </group>
+            <group id="db-c" kind="private-subnet" label="DB 10.0.21.0/24">
+              <node id="rds-c" icon="Amazon Aurora">Aurora<br>Reader</node>
+            </group>
+          </group>
+        </group>
+      </group>
+      <node id="s3" icon="S3">S3<br>静的アセット</node>
+    </group>
+  </group>
+  <edge from="users" to="cf">HTTPS</edge>
+  <edge from="cf" to="igw"></edge>
+  <edge from="cf" to="s3">OAC</edge>
+  <edge from="igw" to="alb"></edge>
+  <edge from="alb" to="ecs-a"></edge>
+  <edge from="alb" to="ecs-c"></edge>
+  <edge from="ecs-a" to="nat-a"></edge>
+  <edge from="ecs-c" to="nat-c"></edge>
+  <edge from="nat-a" to="igw"></edge>
+  <edge from="nat-c" to="igw"></edge>
+  <edge from="ecs-a" to="rds-a"></edge>
+  <edge from="ecs-c" to="rds-a"></edge>
+  <edge from="rds-a" to="rds-c" dashed>レプリケーション</edge>
+</diagram>

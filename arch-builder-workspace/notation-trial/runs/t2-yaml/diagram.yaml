@@ -1,0 +1,69 @@
+title: 受発注SaaS
+items:
+  - id: left
+    group: layout
+    layout: column
+    children:
+      - {id: users, icon: "lucide:users", label: 利用者 (ブラウザ)}
+      - {id: auth0, icon: "logos:auth0-icon", label: Auth0}
+  - id: cf
+    group: generic
+    label: Cloudflare
+    children:
+      - {id: waf, icon: "cloudflare:waf", label: "WAF / CDN"}
+      - id: cfcol
+        group: layout
+        layout: column
+        children:
+          - {id: pages, icon: "cloudflare:pages", label: "Pages\nReact"}
+          - {id: workers, icon: "cloudflare:workers", label: "Workers\nAPI入口"}
+      - {id: kv, icon: "cloudflare:kv", label: "KV\nセッション"}
+  - id: app
+    group: generic
+    label: アプリ
+    layout: column
+    children:
+      - {id: orderapi, icon: "devicon:go", label: 注文 API}
+      - {id: invapi, icon: "devicon:go", label: 在庫 API}
+  - id: data
+    group: generic
+    label: データ
+    layout: column
+    children:
+      - {id: pg, icon: "devicon:postgresql", label: PostgreSQL}
+      - {id: redis, icon: "devicon:redis", label: "Redis\nキャッシュ"}
+  - id: async
+    group: generic
+    label: 非同期処理
+    layout: column
+    children:
+      - {id: kafka, icon: "devicon:apachekafka", label: Kafka}
+      - {id: pyworker, icon: "devicon:python", label: Python ワーカー}
+  - id: ext
+    group: layout
+    layout: column
+    children:
+      - {id: r2, icon: "cloudflare:r2", label: "R2\n帳票PDF"}
+      - {id: acct, group: generic, label: 会計システム}
+      - {id: dd, icon: "logos:datadog-icon", label: Datadog}
+edges:
+  - {from: users, to: waf, label: HTTPS}
+  - {from: waf, to: pages}
+  - {from: waf, to: workers}
+  - {from: workers, to: auth0, label: 認証}
+  - {from: workers, to: kv, label: セッション}
+  - {from: workers, to: orderapi}
+  - {from: workers, to: invapi}
+  - {from: orderapi, to: pg}
+  - {from: invapi, to: pg}
+  - {from: invapi, to: redis, label: キャッシュ}
+  - {from: orderapi, to: kafka, label: イベント}
+  - {from: kafka, to: pyworker}
+  - {from: pyworker, to: r2, label: 帳票PDF}
+  - {from: pyworker, to: acct, label: 夜間CSV}
+  - {from: orderapi, to: dd, label: メトリクス, dashed: true}
+  - {from: invapi, to: dd, dashed: true}
+  - {from: workers, to: dd, dashed: true}
+  - {from: pyworker, to: dd, dashed: true}
+notes:
+  - 監視 (Datadog) への線は破線で通信と区別

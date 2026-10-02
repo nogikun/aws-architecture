@@ -97,6 +97,10 @@ doctor は取り込んだ **Asset Package の日付**も出す。報告に書く
 
 - アイコンは名前で書く。分からなければ検索する: `arch icons search <語>` (例: `arch icons search firewall`)
   - `NAT Gateway` `ALB` `S3` のような通称・略称でも公式名に解決される
+  - AWS 以外 (利用者・DB の汎用アイコン、React / Go / Cloudflare などのロゴ) は、取り込んだセットを `<prefix>:<name>` で書く
+    (例: `lucide:users` `devicon:go` `logos:cloudflare-workers-icon`)。セットは `arch icons fetch` で取り込む:
+    `iconify <prefix...>` (lucide / simple-icons / devicon / logos など)、`svgl`、`cloudflare` (Cloudflare 製品アイコン。取れなければ手順が表示される)、`svg <フォルダかZIP> --prefix <名前>` (手元の SVG)。
+    取り込み済みのセットとライセンスは `arch doctor` に出る。AWS のサービスは AWS 公式アイコンを使う
 - グループは `group:` で種類を指定する (`aws-cloud` / `region` / `vpc` / `az` / `public-subnet` / `private-subnet` /
   `security-group` / `auto-scaling` / `account` / `corporate-dc` / `generic` など。一覧は spec.md)
 - 子を持つ `generic` はまとまりの枠、ラベル付きで線につながる空の `generic` は外部端点としてコンパクトな実線箱になる。未接続の空 group は lint 警告になる

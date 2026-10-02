@@ -1,0 +1,112 @@
+title: AgentCore 構成
+items:
+  - {id: users, icon: Users, label: User}
+  - id: cloud
+    group: aws-cloud
+    layout: column
+    children:
+      - id: top
+        group: layout
+        children:
+          - {id: waf, icon: AWS WAF, label: "WAF\nWeb ACL"}
+          - id: acct
+            group: account
+            label: AWS Account
+            layout: column
+            children:
+              - {id: roleA, icon: AWS Identity Access Management IAM Roles Anywhere, label: Role-MCP-A}
+              - {id: roleB, icon: AWS Identity Access Management IAM Roles Anywhere, label: Role-MCP-B}
+              - {id: roleC, icon: AWS Identity Access Management IAM Roles Anywhere, label: Role-MCP-C}
+      - id: region
+        group: region
+        label: Region (未定)
+        children:
+          - id: left
+            group: layout
+            layout: column
+            children:
+              - id: vpcf
+                group: vpc
+                label: Frontend VPC
+                layout: column
+                children:
+                  - {id: igw, icon: Amazon VPC Internet Gateway, label: Internet Gateway}
+                  - id: pubf
+                    group: public-subnet
+                    label: Public Subnet
+                    children:
+                      - {id: alb, icon: ALB, label: ALB}
+                  - id: privf
+                    group: private-subnet
+                    label: Private Subnet
+                    children:
+                      - {id: fargate, icon: AWS Fargate, label: Fargate}
+              - id: vpca
+                group: vpc
+                label: AgentCore Platform VPC
+                children:
+                  - id: priva
+                    group: private-subnet
+                    label: Private Subnet
+                    children:
+                      - {id: orch, icon: Amazon Bedrock AgentCore, label: Orchestrator Agent}
+                      - {id: gwa, icon: Amazon Bedrock AgentCore, label: AgentCore Gateway}
+                      - id: subs
+                        group: layout
+                        layout: column
+                        children:
+                          - {id: subA, icon: Amazon Bedrock AgentCore, label: SubAgent A}
+                          - {id: subB, icon: Amazon Bedrock AgentCore, label: SubAgent B}
+                          - {id: subC, icon: Amazon Bedrock AgentCore, label: SubAgent C}
+                      - {id: icpt, icon: Amazon Bedrock AgentCore, label: Interceptor}
+          - id: vpcm
+            group: vpc
+            label: MCP VPC
+            children:
+              - id: privm
+                group: private-subnet
+                label: Private Subnet
+                layout: column
+                children:
+                  - {id: cedar, icon: Amazon Bedrock AgentCore, label: Cedar Policy Engine}
+                  - {id: gwm, icon: Amazon Bedrock AgentCore, label: AgentCore Gateway}
+                  - {id: mcpA, icon: Amazon Bedrock AgentCore, label: MCP Server A}
+                  - {id: mcpB, icon: Amazon Bedrock AgentCore, label: MCP Server B}
+                  - {id: mcpC, icon: Amazon Bedrock AgentCore, label: MCP Server C}
+          - {id: rag, icon: Amazon DynamoDB, label: "RAG\nDynamoDB"}
+  - id: ext
+    group: layout
+    layout: column
+    children:
+      - {id: awsenv, group: generic, label: AWS environment}
+      - {id: ksrv, group: generic, label: AWS Knowledge Server}
+edges:
+  - {from: users, to: igw, label: HTTPS}
+  - {from: igw, to: alb, label: HTTPS}
+  - {from: waf, to: alb, label: Web ACL association, dashed: true}
+  - {from: alb, to: fargate, label: HTTPS}
+  - {from: fargate, to: orch, label: HTTPS}
+  - {from: orch, to: gwa}
+  - {from: gwa, to: subA}
+  - {from: gwa, to: subB}
+  - {from: gwa, to: subC}
+  - {from: subA, to: icpt}
+  - {from: subB, to: icpt}
+  - {from: subC, to: icpt}
+  - {from: subA, to: roleA, dashed: true}
+  - {from: subB, to: roleB, dashed: true}
+  - {from: subC, to: roleC, dashed: true}
+  - {from: icpt, to: cedar, label: HTTPS / MCP}
+  - {from: cedar, to: gwm}
+  - {from: gwm, to: mcpA}
+  - {from: gwm, to: mcpB}
+  - {from: gwm, to: mcpC}
+  - {from: mcpA, to: awsenv}
+  - {from: mcpB, to: ksrv}
+  - {from: mcpC, to: rag}
+notes:
+  - Region は元資料に無いため未定
+  - AZ は元資料に無いため省略
+  - VPC 間の具体的なネットワーク経路は不明 (Interceptor から MCP VPC へは HTTPS / MCP とのみ記載)
+  - Role-MCP-A/B/C の権限内容は不明
+  - 各 MCP Server と接続先 (AWS environment / AWS Knowledge Server / RAG) の対応は A/B/C の順で仮置き

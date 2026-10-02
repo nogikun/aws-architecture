@@ -5,9 +5,10 @@
 ```yaml
 title: 図の名前                  # draw.io のページ名になる
 page_aspect: 1.33               # 省略可。用紙の幅/高さ (1.0〜2.2)。未指定は16:9
+icon_style: tile                 # 省略可。取り込んだセットのアイコンを白い角丸タイルに載せる (plain: そのまま。既定)。AWS 公式アイコンには効かない
 items:                           # キャンバス直下の要素。入れ子は children で表す
   - id: users                    # 図全体で一意。接続線と arch edit はこれで指す
-    icon: Users                  # node: 公式アイコンの名前 (略称でも可)
+    icon: Users                  # node: 公式アイコンの名前 (略称でも可)。取り込んだセットは lucide:users / devicon:go
     label: 利用者                # 表示するラベル。"\n" で改行
     border: top                  # 省略可。親グループの枠線の上に置く辺: top / right / bottom / left (none で打ち消す)
   - id: cloud

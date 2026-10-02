@@ -18,3 +18,7 @@ skills/arch-builder/icons/
 arch-builder-workspace/iteration-*/
 # 作図ループの作業ファイル
 .arch-loop/
+.archdraw-loop/
+# 評価・試作の .drawio はアイコンの SVG (AWS 公式アイコンなど) をそのまま埋め込むので、再配布しない。
+# 定義 (.py / .yaml) と PNG だけを残し、.drawio は定義から archdraw build で作り直す
+arch-builder-workspace/**/*.drawio

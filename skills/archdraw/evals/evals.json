@@ -1,0 +1,176 @@
+{
+  "skill_name": "archdraw",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "東京リージョンで、ECS on Fargate と Aurora MySQL の本番用 Web アプリ構成を設計して drawio で図にして。前段は CloudFront + WAF、静的ファイルは S3。2AZ構成で、アプリからの外向き通信は NAT 経由。設計レビューで使う。",
+      "expected_output": "arch.yaml / .drawio / .png。公式アイコン、正しい入れ子、2AZ対称、NATはpublic、Auroraはprivate、CloudFront/WAFはRegion外、S3はVPC外。lint error 0。",
+      "files": [],
+      "assertions": [
+        {
+          "type": "machine",
+          "text": "編集可能な .drawio と確認用 PNG と .py (図の定義) が出力されている"
+        },
+        {
+          "type": "machine",
+          "text": "archdraw lint で error が 0 件"
+        },
+        {
+          "type": "machine",
+          "text": "archdraw lint で A-* と N-EDGE-* の warn が 0 件 (残すなら報告に理由がある)"
+        },
+        {
+          "type": "design",
+          "text": "最終版の PNG に対する批評が記録され、pass している (未解決の should は報告に並んでいる)"
+        },
+        {
+          "type": "legibility",
+          "text": "PNG だけを見て、線の行き先を取り違える箇所が無い (無関係な要素の脇を通る線、逆向きの矢印、重なった線)"
+        },
+        {
+          "type": "design",
+          "text": "2 AZ が横に並び、各 AZ に public / private (app, db) subnet がある"
+        },
+        {
+          "type": "design",
+          "text": "IGW は VPC の上辺の線の上、NAT は各 AZ の public subnet、Aurora は DB subnet"
+        },
+        {
+          "type": "design",
+          "text": "CloudFront と WAF は Region の外、S3 は VPC の外"
+        },
+        {
+          "type": "design",
+          "text": "報告に Asset Package の日付と、確認した AWS 情報 (無ければ「なし」) がある"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "API Gateway + Lambda + DynamoDB のサーバーレス構成を AWS 構成図にしてほしい。認証は Cognito、注文受付後の重い処理は SQS に積んで別の Lambda で非同期に処理、結果は SNS でメール通知。VPC は使わない。",
+      "expected_output": "VPC を描かず、リージョンサービスを Region 直下に配置した図。非同期の流れが破線などで区別されている。lint error 0。",
+      "files": [],
+      "assertions": [
+        {
+          "type": "machine",
+          "text": "編集可能な .drawio と確認用 PNG と .py (図の定義) が出力されている"
+        },
+        {
+          "type": "machine",
+          "text": "archdraw lint で error が 0 件"
+        },
+        {
+          "type": "machine",
+          "text": "archdraw lint で A-* と N-EDGE-* の warn が 0 件 (残すなら報告に理由がある)"
+        },
+        {
+          "type": "design",
+          "text": "最終版の PNG に対する批評が記録され、pass している (未解決の should は報告に並んでいる)"
+        },
+        {
+          "type": "legibility",
+          "text": "PNG だけを見て、線の行き先を取り違える箇所が無い (無関係な要素の脇を通る線、逆向きの矢印、重なった線)"
+        },
+        {
+          "type": "design",
+          "text": "VPC が描かれていない"
+        },
+        {
+          "type": "design",
+          "text": "API Gateway / Lambda x2 / DynamoDB / Cognito / SQS / SNS がすべて公式アイコンで描かれている"
+        },
+        {
+          "type": "legibility",
+          "text": "非同期の流れ (SQS 経由) が、同期の流れと線種で区別されている"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "skills/archdraw/evals/files/flawed.drawio は社内業務システムの構成図なんだけど、AWS のお作法的におかしくない？おかしいところを直した版を作って、何を直したか教えて。本番なので冗長化も考えて。",
+      "expected_output": "取り込んで lint の指摘 (NAT が private、RDS/EC2 が public、S3 が VPC 内、ALB が AZ 内、IGW なし、1 AZ) を直した図と、直した点の説明。",
+      "files": [
+        "evals/files/flawed.drawio"
+      ],
+      "assertions": [
+        {
+          "type": "machine",
+          "text": "編集可能な .drawio と確認用 PNG と .py (図の定義) が出力されている"
+        },
+        {
+          "type": "machine",
+          "text": "archdraw lint で error が 0 件"
+        },
+        {
+          "type": "machine",
+          "text": "archdraw lint で A-* と N-EDGE-* の warn が 0 件 (残すなら報告に理由がある)"
+        },
+        {
+          "type": "design",
+          "text": "最終版の PNG に対する批評が記録され、pass している (未解決の should は報告に並んでいる)"
+        },
+        {
+          "type": "legibility",
+          "text": "PNG だけを見て、線の行き先を取り違える箇所が無い (無関係な要素の脇を通る線、逆向きの矢印、重なった線)"
+        },
+        {
+          "type": "design",
+          "text": "NAT を public に、RDS と EC2 を private に移している"
+        },
+        {
+          "type": "design",
+          "text": "S3 を VPC の外に出している"
+        },
+        {
+          "type": "design",
+          "text": "2 AZ を横に並べ、ALB を AZ の外に置き、IGW を VPC の上辺の線の上に追加している"
+        },
+        {
+          "type": "design",
+          "text": "社内システムの入り方 (インターネット公開か社内限定か) を前提として図の notes と報告に書いている"
+        },
+        {
+          "type": "design",
+          "text": "report.md が直した点を一つずつ説明している"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "【画像由来ベンチマーク】設計レビュー用の AWS 構成図を作ってください。AWS Cloud の外に User を置き、HTTPS を Internet Gateway 経由でフロントエンド VPC の Public Subnet にある ALB へつなぐ。ALB から Private Subnet の Fargate へ HTTPS で接続し、WAF の Web ACL association は通信線と区別して破線で示す。下段に AgentCore Platform VPC を置き、Private Subnet 内で Orchestrator Agent → AgentCore Gateway → SubAgent A/B/C の順に分岐させ、3つの SubAgent は縦に並べて Interceptor に集約する。Fargate から Orchestrator へ HTTPS、各 SubAgent から AWS Account 内の Role-MCP-A/B/C へ破線の関連を示す。Interceptor から HTTPS / MCP で別の MCP VPC に接続し、その Private Subnet に Cedar Policy Engine と AgentCore Gateway、MCP Server A/B/C を置く。各 MCP Server から AWS environment、AWS Knowledge Server、RAG (DynamoDB) へそれぞれ接続する。元資料で分からない Region、AZ、VPC 間の具体的なネットワーク経路、Role の権限内容は決めつけず、図と報告に不明点として残す。",
+      "expected_output": "編集可能な .arch.yaml / .drawio と、同じ最終 .drawio から書き出して目視批評した PNG。図と報告に未知のネットワーク前提を明示し、AgentCore の VPC 接続表現は AWS 公式資料で確認する。lint error 0。意図した generic endpoint box は接続済みなら空グループ警告にしない。MCP Server と各接続先を水平に対応づけ、SubAgent と Role の破線を独立して追える配置にする。",
+      "files": [],
+      "assertions": [
+        {
+          "type": "machine",
+          "text": "最終 .drawio の保存後 lint で error が 0 件。flow と明示した exit / entry が保存・再読込後も保持される"
+        },
+        {
+          "type": "machine",
+          "text": "ラベル付きで接続済みの generic endpoint は compact な実線箱として描き N-EMPTY-GROUP を出さず、未接続の空 generic group は引き続き警告される"
+        },
+        {
+          "type": "machine",
+          "text": "編集可能な .py (図の定義) / .drawio と、最終 .drawio から生成した確認用 PNG がそろう。生成できない環境ではその事実と理由を報告する"
+        },
+        {
+          "type": "design",
+          "text": "User、WAF、frontend VPC の IGW / ALB / Fargate、2つの AgentCore VPC、Orchestrator / Gateway / 縦並び3 SubAgent / Interceptor、横並び3 IAM role、3 MCP Server と各接続先が表現され、各MCP接続先は対応Serverと同じ高さに置かれる"
+        },
+        {
+          "type": "design",
+          "text": "Region / AZ / VPC 間経路 / IAM 権限を捏造せず、未確定事項を図の注記と報告に残す"
+        },
+        {
+          "type": "design",
+          "text": "AWS 公式資料を調べ、AgentCore Runtime の VPC ENI と Gateway への PrivateLink / Gateway の VPC egress を区別して、図の配置が論理表現か実リソース配置か報告する"
+        },
+        {
+          "type": "legibility",
+          "text": "PNG だけを見て WAF association、HTTPS/MCP の主経路、3本の IAM 関連線、Gateway から各 MCP Server と接続先への対応を読み違えない。注記を全体表示で読める。最終版を厳しめの別モデル批評に通し、pass する"
+        }
+      ]
+    }
+  ],
+  "protocol": "1 プロンプト × 1 条件あたり 3 回。最終 PNG は arch-builder (2026-09-28 の最終版) と盲検の対で比べる"
+}

@@ -210,6 +210,42 @@ def test_drawio_round_trip_keeps_geometry(tmp_path):
     assert geo(d1.read_text(encoding="utf-8")) == geo(d2)
 
 
+def test_imported_icon_set_builds_and_round_trips(tmp_path):
+    """importer で取り込んだセット (prefix:name) を使い、.drawio を経由しても同じアイコンに戻る。"""
+    from arch_builder import importer
+    from arch_builder.icons import Library
+    src = tmp_path / "svg"
+    src.mkdir()
+    (src / "Cards.svg").write_text('<svg viewBox="0 0 24 12" fill="none" stroke="currentColor"><path d="M0 0h24"/></svg>')
+    (src / "Box.svg").write_text('<svg width="10" height="10"><rect width="10" height="10"/></svg>')
+    importer.run("svg", [str(src)], "t", dest=tmp_path / "sets")
+    lib = Library(cli.lib_dir(), sets_dir=tmp_path / "sets")
+    ic = lib.resolve("t:cards")
+    assert ic and (ic.w, ic.h) == (24, 24)  # 横長は正方形に収める
+    assert "#232F3E" in base64.b64decode(ic.data.split(",", 1)[1]).decode()  # currentColor は文字色にする
+    from arch_builder.icons import _thin_strokes  # Lucide (24px・線幅2) は 48px で 1.5px の線になる
+    assert _thin_strokes('<path stroke-width="2"/>', 24) == '<path stroke-width="0.75"/>'
+    y = spec(tmp_path, [{"id": "a", "icon": "t:cards", "label": "A"}, {"id": "b", "icon": "t:box", "label": "B"},
+                        {"id": "c", "icon": "t:nope", "label": "C"}], [{"from": "a", "to": "b"}])
+    got = codes(cli.load_yaml(y, lib))
+    assert ("E-ICON", "c") in got and not any(i in ("a", "b") for _, i in got if _.startswith(("E-", "N-UNMANAGED")))
+    y.write_text(y.read_text(encoding="utf-8").replace("t:nope", "t:box"), encoding="utf-8")
+    d = tmp_path / "t.drawio"
+    d.write_text(cli.to_drawio(cli.load_yaml(y, lib)), encoding="utf-8")
+    m = cli.load_drawio(d, lib)
+    assert {i.id: i.raw_icon.name for i in m.items.values()} == {"a": "t:cards", "b": "t:box", "c": "t:box"}
+    # icon_style: tile は図ごとの設定。.drawio を経由しても残り、AWS 公式アイコンには効かない
+    doc = yaml.safe_load(y.read_text(encoding="utf-8"))
+    y.write_text(yaml.safe_dump({**doc, "icon_style": "tile"}, allow_unicode=True), encoding="utf-8")
+    xml = cli.to_drawio(cli.load_yaml(y, lib))
+    imgs = [base64.b64decode(s).decode() for s in re.findall(r"image=data:image/svg\+xml,([A-Za-z0-9+/=]+)", xml)]
+    assert 'arch_icon_style="tile"' in xml and len(imgs) == 3 and all('rx="6"' in s for s in imgs)
+    d.write_text(xml, encoding="utf-8")
+    assert cli.load_drawio(d, lib).icon_style == "tile"
+    y.write_text(yaml.safe_dump({**doc, "icon_style": "round"}, allow_unicode=True), encoding="utf-8")
+    assert ("E-ICON-STYLE", "-") in {(f.code, f.id or "-") for f in lint(cli.load_yaml(y, lib), layout_first=True)}
+
+
 def test_hand_edit_in_drawio_is_checked(tmp_path):
     """draw.io で Aurora を public subnet の上へドラッグした (親は変えていない) ケース。"""
     xml = cli.to_drawio(cli.load_yaml(EXAMPLE, LIB))
